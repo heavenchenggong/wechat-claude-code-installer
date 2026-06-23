@@ -78,6 +78,31 @@ else
 fi
 echo ""
 
+# 6. Upstream drift check (v0.3 新增)
+echo "6) Upstream drift check"
+if [ -d "$HOME/.claude/skills/wechat-claude-code/.git" ]; then
+  CHECK="$(dirname "$0")/check-upstream.sh"
+  if [ -x "$CHECK" ]; then
+    LOCAL=$(cd "$HOME/.claude/skills/wechat-claude-code" && git log -1 --format=%h 2>/dev/null)
+    REMOTE=$(/usr/bin/curl -s --max-time 5 \
+      "https://api.github.com/repos/Wechat-ggGitHub/wechat-claude-code/commits/main" \
+      | python3 -c "import json,sys; print(json.load(sys.stdin).get('sha','')[:7])" 2>/dev/null)
+    if [ -n "$LOCAL" ] && [ -n "$REMOTE" ]; then
+      if [ "$LOCAL" = "$REMOTE" ]; then
+        echo "   OK local ($LOCAL) = remote ($REMOTE)"
+      else
+        echo "   WARN upstream drift: local $LOCAL → remote $REMOTE"
+        echo "        run check-upstream.sh --since to see what's new"
+      fi
+    else
+      echo "   INFO 网络不通或 API 失败，跳过"
+    fi
+  fi
+else
+  echo "   INFO 上游未安装"
+fi
+echo ""
+
 echo "============================================================"
 echo "  doctor done. If all OK above, run install.sh next."
 echo "============================================================"

@@ -44,9 +44,11 @@ metadata:
 ~/.claude/skills/wechat-claude-code-installer/scripts/doctor.sh
 ```
 
-报告：Node 版本、是否已装、是否已绑、`ANTHROPIC_BASE_URL` 合规风险、OS 平台。
+报告 6 项：Node 版本、是否已装、是否已绑、`ANTHROPIC_BASE_URL` 合规风险、OS 平台、**上游漂移检测**（v0.3 新增）。
 
 **重点关注 4️⃣**：如果 `ANTHROPIC_BASE_URL` 指向本地代理（公司 LLM 网关），**所有微信对话会经此代理进入公司日志**——聊私事前请改 plist 切回个人 Anthropic 账号。
+
+**新增第 6 项 — 上游漂移**：上游 wechat-claude-code 项目快速迭代（一周可能有 5-10 个 commit）。doctor 自动比对本地 vs 远程，发现漂移会建议你跑 `check-upstream.sh --since` 看具体新增哪些 commit。
 
 ### 第 1-2 步：一键安装（含扫码）
 
@@ -111,6 +113,26 @@ launchctl unload -w ~/Library/LaunchAgents/com.wechat-claude-code.bridge.plist
 # 重新启用
 launchctl load -w ~/Library/LaunchAgents/com.wechat-claude-code.bridge.plist
 ```
+
+## 上游漂移检测（v0.3 新增）
+
+上游 `Wechat-ggGitHub/wechat-claude-code` **迭代速度极快**（实测每周 5-10 个 commit），你装的版本一周后就可能落后了几个 fix。本 skill 6 个坑修法是基于上游 v1.0.0 + 特定 commit 范围，**上游修了某些坑后这些修法可能多余甚至冲突**。
+
+```bash
+# 看本地 vs 远程是否漂移
+~/.claude/skills/wechat-claude-code-installer/scripts/check-upstream.sh
+
+# 把当前装的版本 pin 为基线
+~/.claude/skills/wechat-claude-code-installer/scripts/check-upstream.sh --pin
+
+# 看 pin 以来上游所有 commit 列表
+~/.claude/skills/wechat-claude-code-installer/scripts/check-upstream.sh --since
+```
+
+**建议节奏**：
+- **每次跑 install.sh 后**——自动 pin 当时上游 commit
+- **每周跑一次** `check-upstream.sh --since`——看上游加了哪些 commit
+- 看到关键 fix（如"修了 cwd 问题"）→ 升级试装 → 验证 6 坑还要不要修 → 更新 pin
 
 ## 切换 API 端点（避开公司代理）
 

@@ -53,6 +53,13 @@ fi
 
 echo ""
 echo "✅ 安装完成。"
+
+# v0.3 新增：自动 pin 当前上游 commit（基线，方便后续检测漂移）
+CHECK="$(dirname "$0")/check-upstream.sh"
+if [ -x "$CHECK" ]; then
+  "$CHECK" --pin || true
+fi
+
 echo ""
 echo "下一步："
 echo "  1. 跑 fix-cwd.sh \"$WORK_DIR\"          修复 cwd 僵尸字段"
@@ -61,3 +68,7 @@ echo "  3. 跑 fix-caffeinate.sh               加防闲置睡眠"
 echo "  4. cd $TARGET && npm run daemon -- start  起 daemon"
 echo ""
 echo "或者直接跑 fix-all.sh \"$WORK_DIR\" 一次完成 1+2+3。"
+echo ""
+echo "💡 上游有快速迭代，建议每周跑一次："
+echo "   check-upstream.sh        看本地 vs 远程是否漂移"
+echo "   check-upstream.sh --since 看 pin 以来上游加了哪些 commit"
